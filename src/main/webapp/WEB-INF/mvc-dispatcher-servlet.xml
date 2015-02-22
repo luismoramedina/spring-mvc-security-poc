@@ -1,0 +1,45 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:sec="http://www.springframework.org/schema/security"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="
+        http://www.springframework.org/schema/beans     
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/security
+        http://www.springframework.org/schema/security/spring-security.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd">
+
+    <context:component-scan base-package="org.spring.mvc.poc.controller"/>
+
+    <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <property name="prefix">
+            <value>/WEB-INF/pages/</value>
+        </property>
+        <property name="suffix">
+            <value>.jsp</value>
+        </property>
+    </bean>
+
+    <!--
+    <sec:authentication-manager alias="authenticationManager">
+        <sec:authentication-provider ref="myAuthenticationProvider"/>
+    </sec:authentication-manager>
+    -->
+
+    <bean id="myCustomFilter" class="org.spring.mvc.poc.filter.MyCustomFilter">
+    </bean>
+
+    <bean id="mySecondCustomFilter" class="org.spring.mvc.poc.filter.MySecondCustomFilter"/>
+
+    <sec:http auto-config="true">
+        <sec:custom-filter after="ANONYMOUS_FILTER" ref="myCustomFilter" />
+        <sec:custom-filter position="LAST" ref="mySecondCustomFilter"/>
+
+        <sec:intercept-url pattern="/hello" access="ROLE_ANONYMOUS, ROLE_USER"/>
+        <sec:intercept-url pattern="/**" access="ROLE_USER"/>
+        <sec:form-login login-page="/hello?error=true"/>
+    </sec:http>
+
+    <sec:authentication-manager/>
+</beans>
