@@ -10,7 +10,9 @@
         http://www.springframework.org/schema/context
         http://www.springframework.org/schema/context/spring-context.xsd">
 
+    <!-- Esto se puede definir en un applicationContext.xml -->
     <context:component-scan base-package="org.spring.mvc.poc.controller"/>
+    
 
     <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
         <property name="prefix">
@@ -21,25 +23,68 @@
         </property>
     </bean>
 
-    <!--
-    <sec:authentication-manager alias="authenticationManager">
-        <sec:authentication-provider ref="myAuthenticationProvider"/>
-    </sec:authentication-manager>
-    -->
-
-    <bean id="myCustomFilter" class="org.spring.mvc.poc.filter.MyCustomFilter">
-    </bean>
-
+	<!--  -->
+	
+	
+	<!-- Declaracion de los filtros de la aplicación -->
+    <bean id="myCustomFilter" class="org.spring.mvc.poc.filter.MyCustomFilter"/>
     <bean id="mySecondCustomFilter" class="org.spring.mvc.poc.filter.MySecondCustomFilter"/>
-
-    <sec:http auto-config="true">
-        <sec:custom-filter after="ANONYMOUS_FILTER" ref="myCustomFilter" />
-        <sec:custom-filter position="LAST" ref="mySecondCustomFilter"/>
-
-        <sec:intercept-url pattern="/hello" access="ROLE_ANONYMOUS, ROLE_USER"/>
-        <sec:intercept-url pattern="/**" access="ROLE_USER"/>
+    <bean id="rememberLoginFilter" class="org.spring.mvc.poc.filter.RememberLoginFilter"/>
+    
+    
+    <!-- Agrupar en una lista los filtros propios de la aplicación -->
+    <bean id="customFilters" class="org.springframework.web.filter.CompositeFilter">
+    	<property name="filters">
+    		<list>
+    			<ref bean="myCustomFilter"/>
+    			<ref bean="mySecondCustomFilter"/>
+    			<ref bean="rememberLoginFilter"/>
+    		</list>
+    	</property>
+    </bean>
+    
+	<!-- /notsecure has an empty filter list -->
+	<sec:http pattern="/notsecure" security="none" />
+	
+	
+    <sec:http auto-config="true" use-expressions="true">
+    
+    	<!-- -sec:access-denied-handler error-page="403"/> -->
+        <sec:intercept-url pattern="/hello" access="permitAll"/>
+        <sec:intercept-url pattern="/**" access="isAuthenticated()"/>
         <sec:form-login login-page="/hello?error=true"/>
+        <sec:logout logout-url="/logout" logout-success-url="/hello"/>
+        
+		<sec:custom-filter after="ANONYMOUS_FILTER" ref="customFilters" />
+     
+        <!-- Gestionar la expiración de sesiones: despues de haber expirado la sesion, si el usuario
+        envia una petición con un id de sesión expirada redirigira a una url configurada. -->
+        <!-- sec:session-management invalid-session-url="/hello"> -->
+        	<!-- Para manejar la concurrencia de sesiones -->
+        	<!-- sec:concurrency-control max-sessions="1" error-if-maximum-exceeded="true"/>
+        </sec:session-management> -->
     </sec:http>
+    
+    <!-- not working! es necesario definir los beans y propiedades... -->
+    <!-- bean id="filterChainProxy" class="org.springframework.security.web.FilterChainProxy">
+	    <sec:filter-chain-map path-type="ant">
+	    	<sec:filter-chain pattern="/**" 
+	    			filters="
+		    	securityContextPersistenceFilter,
+		    	webAsyncManagerIntegrationFilter,
+		    	logoutFilter,
+		    	usernamePasswordAuthenticationFilter,
+		    	basicAuthenticationFilter,
+		    	requestCacheAwareFilter,
+		    	securityContextHolderAwareRequestFilter,
+		    	anonymousAuthenticationFilter,
+		    	myCustomFilter,
+		    	rememberLoginFilter,
+		    	sessionManagementFilter,
+		    	exceptionTranslationFilter,
+		    	filterSecurityInterceptor" />
+	    </sec:filter-chain-map>
+    </bean> -->
 
     <sec:authentication-manager/>
 </beans>

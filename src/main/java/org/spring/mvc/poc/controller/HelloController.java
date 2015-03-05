@@ -5,14 +5,17 @@ import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 /**
- * @author luis mora
+ * 
+ * @author krubio
+ *
  */
 @Controller
 public class HelloController {
 
-    @RequestMapping(value = {"/hello", "/"})
+    @RequestMapping(value = {"/hello", "/" , "/login"})
     public String doHello(ModelMap model) {
-        model.addAttribute("name", "luismoramedina");
+        model.addAttribute("title", "Access Spring Security....");
+        model.addAttribute("message","Welcome page!");
         System.out.println("model = " + model);
         return "hello";
     }
